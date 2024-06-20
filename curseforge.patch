@@ -1,0 +1,50 @@
+diff --git a/launcher/modplatform/flame/FlameModIndex.cpp b/launcher/modplatform/flame/FlameModIndex.cpp
+index 345883c17..3dd47f76e 100644
+--- a/launcher/modplatform/flame/FlameModIndex.cpp
++++ b/launcher/modplatform/flame/FlameModIndex.cpp
+@@ -136,8 +136,12 @@ auto FlameMod::loadIndexedPackVersion(QJsonObject& obj, bool load_changelog) ->
+     file.fileId = Json::requireInteger(obj, "id");
+     file.date = Json::requireString(obj, "fileDate");
+     file.version = Json::requireString(obj, "displayName");
+-    file.downloadUrl = Json::ensureString(obj, "downloadUrl");
+     file.fileName = Json::requireString(obj, "fileName");
++    file.downloadUrl = Json::ensureString(obj, "downloadUrl");
++    if (file.downloadUrl.isEmpty() && !file.fileName.isEmpty()) {
++        auto fileId = file.fileId.toString();
++        file.downloadUrl = QString("https://edge.forgecdn.net/files/%1/%2/%3").arg(fileId.left(4), fileId.mid(4), file.fileName);
++    }
+ 
+     ModPlatform::IndexedVersionType::VersionType ver_type;
+     switch (Json::requireInteger(obj, "releaseType")) {
+diff --git a/launcher/modplatform/flame/FlamePackIndex.cpp b/launcher/modplatform/flame/FlamePackIndex.cpp
+index ca8e0a853..c53132812 100644
+--- a/launcher/modplatform/flame/FlamePackIndex.cpp
++++ b/launcher/modplatform/flame/FlamePackIndex.cpp
+@@ -109,6 +109,12 @@ void Flame::loadIndexedPackVersions(Flame::IndexedPack& pack, QJsonArray& arr)
+         file.version_type = ModPlatform::IndexedVersionType(ver_type);
+         file.downloadUrl = Json::ensureString(version, "downloadUrl");
+ 
++        auto fileName = Json::requireString(version, "fileName");
++        if (file.downloadUrl.isEmpty() && !fileName.isEmpty()) {
++            auto fileId = QString::number(file.fileId);
++            file.downloadUrl = QString("https://edge.forgecdn.net/files/%1/%2/%3").arg(fileId.left(4), fileId.mid(4), fileName);
++        }
++
+         // only add if we have a download URL (third party distribution is enabled)
+         if (!file.downloadUrl.isEmpty()) {
+             unsortedVersions.append(file);
+diff --git a/launcher/modplatform/flame/PackManifest.cpp b/launcher/modplatform/flame/PackManifest.cpp
+index 40a523d31..49a2b8b92 100644
+--- a/launcher/modplatform/flame/PackManifest.cpp
++++ b/launcher/modplatform/flame/PackManifest.cpp
+@@ -92,6 +92,10 @@ bool Flame::File::parseFromObject(const QJsonObject& obj, bool throw_on_blocked)
+ 
+     // may throw, if the project is blocked
+     QString rawUrl = Json::ensureString(obj, "downloadUrl");
++    if (rawUrl.isEmpty() && !fileName.isEmpty()) {
++        auto fileId_ = QString::number(fileId);
++        rawUrl = QString("https://edge.forgecdn.net/files/%1/%2/%3").arg(fileId_.left(4), fileId_.mid(4), fileName);
++    }
+     url = QUrl(rawUrl, QUrl::TolerantMode);
+     if (!url.isValid() && throw_on_blocked) {
+         throw JSONValidationError(QString("Invalid URL: %1").arg(rawUrl));

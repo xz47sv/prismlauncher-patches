@@ -1,0 +1,21 @@
+diff --git a/launcher/minecraft/auth/AccountList.cpp b/launcher/minecraft/auth/AccountList.cpp
+index 68ebe3626..1cafbbf5c 100644
+--- a/launcher/minecraft/auth/AccountList.cpp
++++ b/launcher/minecraft/auth/AccountList.cpp
+@@ -577,12 +577,7 @@ void AccountList::setListFilePath(QString path, bool autosave)
+ 
+ bool AccountList::anyAccountIsValid()
+ {
+-    for (auto account : m_accounts) {
+-        if (account->ownsMinecraft()) {
+-            return true;
+-        }
+-    }
+-    return false;
++    return true;
+ }
+ 
+ void AccountList::fillQueue()
+-- 
+2.44.0
+
